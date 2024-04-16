@@ -4,13 +4,14 @@ pragma solidity ^0.8.24;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TCKToken is ERC20 {
-    constructor(uint256 initialSupply) ERC20("TICKET", "TCK") {
-        _mint(msg.sender, initialSupply);
+    constructor(address Owner, uint256 initialSupply) ERC20("TICKET", "TCK") {
+        _mint(Owner, initialSupply);
     }
 
     function mintToUser(address to, uint256 amount) external{ //add onlyOwner
         _mint(to, amount);
     }
+
 }
 
 
@@ -33,15 +34,22 @@ contract TicketingSystem {
     event TicketsPurchased(uint256 eventId, address purchaser, uint256 ticketsBought);
     event TicketsTransferred(uint256 fromEventId, uint256 toEventId, address sender, address recipient, uint256 ticketsTransferred);
 
-    constructor(string memory _tokenName, string memory _tokenSymbol, uint256 _tokenInitialSupply) {
+    constructor() {
         owner = msg.sender;
-        token = new TCKToken(1000);
-        token.mintToUser(msg.sender, 200);
+        token = new TCKToken(msg.sender, 1000);
+        //msg.sender !== contract address. On Token contractAddress=1000 msg.sender=200
     }
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
         _;
+    }
+
+    function getTotalSupply() public view returns(uint256){ //add onlyOwner
+        return token.totalSupply();
+    }
+    function getTotalSupplyUser(address addr) public view returns(uint256){ //add onlyOwner
+        return token.balanceOf(addr);
     }
 
     function createEvent(string memory _name, uint256 _ticketsAvailable, uint256 _price) external onlyOwner {
