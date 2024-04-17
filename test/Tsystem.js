@@ -17,8 +17,8 @@ describe("Test contract Token", function () {
       const ownerTest = await contract.owner();
 
       expect(ownerTest).to.equal("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
-      expect(await contract.getTotalSupplyUser(ownerTest)).to.equal("1000");
-      //expect(await contract.getTotalSupplyUser(contract.target)).to.equal("1000");
+      //expect(await contract.getTotalSupplyUser(ownerTest)).to.equal("1000");
+      expect(await contract.getTotalSupplyUser(contract.target)).to.equal("1000");
       expect(await contract.getTotalSupply()).to.equal("1000");
 
 

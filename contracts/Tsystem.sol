@@ -4,8 +4,8 @@ pragma solidity ^0.8.24;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TCKToken is ERC20 {
-    constructor(address Owner, uint256 initialSupply) ERC20("TICKET", "TCK") {
-        _mint(Owner, initialSupply);
+    constructor(uint256 initialSupply) ERC20("TICKET", "TCK") {
+        _mint(msg.sender, initialSupply);
     }
 
     function mintToUser(address to, uint256 amount) external{ //add onlyOwner
@@ -24,10 +24,18 @@ contract TicketingSystem {
         mapping(address => uint256) ticketsOwned;
     }
 
+    struct EventInfo {
+        uint256 eventId;
+        string name;
+        uint256 ticketsAvailable;
+        uint256 price;
+        bool active;
+    }
+
     mapping(uint256 => Event) public events;
-    uint256 public eventIdCounter;
+    uint256 private eventIdCounter;
     address public owner;
-    TCKToken public token;
+    TCKToken private token;
 
     event EventCreated(uint256 eventId, string name, uint256 ticketsAvailable, uint256 price);
     event EventRemoved(uint256 eventId);
@@ -36,7 +44,7 @@ contract TicketingSystem {
 
     constructor() {
         owner = msg.sender;
-        token = new TCKToken(msg.sender, 1000);
+        token = new TCKToken(1000);
         //msg.sender !== contract address. On Token contractAddress=1000 msg.sender=200
     }
 
@@ -53,17 +61,33 @@ contract TicketingSystem {
     }
 
     function createEvent(string memory _name, uint256 _ticketsAvailable, uint256 _price) external onlyOwner {
-        // events[eventIdCounter] = Event(_name, _ticketsAvailable, _price, true);
-        // eventIdCounter++;
-        // emit EventCreated(eventIdCounter - 1, _name, _ticketsAvailable, _price);
+        Event storage newEvent = events[eventIdCounter];
+        newEvent.name = _name;
+        newEvent.ticketsAvailable = _ticketsAvailable;
+        newEvent.price = _price;
+        newEvent.active = true;
+        eventIdCounter++;
+        emit EventCreated(eventIdCounter - 1, _name, _ticketsAvailable, _price);
     }
 
     function removeEvent(uint256 _eventId) external onlyOwner {
-        // require(_eventId < eventIdCounter, "Invalid event ID");
-        // delete events[_eventId];
-        // emit EventRemoved(_eventId);
+        require(_eventId < eventIdCounter, "Invalid event ID");
+        delete events[_eventId];
+        emit EventRemoved(_eventId);
     }
 
+    function setEventStatus(uint256 _eventId, bool status) external onlyOwner {
+        require(_eventId < eventIdCounter, "Invalid event ID");
+        events[_eventId].active = status;
+    }
+
+    function getEventList() external view onlyOwner returns(EventInfo[] memory){
+        EventInfo[] memory result = new EventInfo[](eventIdCounter);
+        for(uint256 i=0; i< eventIdCounter; i++){
+            result[i] = EventInfo(i, events[i].name, events[i].ticketsAvailable, events[i].price, events[i].active);
+        }
+        return result;
+    }
     function purchaseTickets(uint256 _eventId, uint256 _ticketsToBuy) external {
         // require(_eventId < eventIdCounter, "Invalid event ID");
         // Event storage selectedEvent = events[_eventId];
