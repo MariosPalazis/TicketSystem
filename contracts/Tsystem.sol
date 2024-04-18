@@ -93,7 +93,6 @@ contract TicketingSystem {
     function setEventStatus(uint256 _eventId, bool status) external onlyOwner {
         require(_eventId < eventIdCounter, "Invalid event ID");
         events[_eventId].active = status;
-        console.log(events[_eventId].name);
     }
 
     function getEventList() external view onlyOwner returns(EventInfo[] memory){
@@ -103,15 +102,19 @@ contract TicketingSystem {
         }
         return result;
     }
-    function purchaseTickets(uint256 _eventId, uint256 _ticketsToBuy, uint256 tokensPay) external payable{// working with 2 decimals
+    function purchaseTickets(uint256 _eventId, uint256 _ticketsToBuy, uint256 tokensPay) external payable{
         require(_eventId < eventIdCounter, "Invalid event ID");
         Event storage selectedEvent = events[_eventId];
-        require(selectedEvent.active, "Event is not active");
-        require(selectedEvent.ticketsAvailable <= _ticketsToBuy, "Not enough tickets available");
-        require(tokensPay > getTotalSupplyUser(msg.sender), "Not enough tokens in your account");
 
-        uint256 cost = (_ticketsToBuy * selectedEvent.price)*100 - (tokensPay*5 * 27639580);//solidity support for froating. is 276395.80 *100
-        require(msg.value < cost, "Not enough money send");
+        require(selectedEvent.active, "Event is not active");
+        require(selectedEvent.ticketsAvailable >= _ticketsToBuy, "Not enough tickets available");
+        if(tokensPay>0){
+            require(tokensPay <= getTotalSupplyUser(msg.sender), "Not enough tokens in your account");
+        }
+
+        uint256 cost = (_ticketsToBuy * selectedEvent.price) - (tokensPay * 5 * 55279);//solidity support for froating. is 276395.80 *100
+        console.log(msg.value , cost);
+        require(msg.value >= cost, "Not enough money send");
         if(tokensPay > 0){
             token.transferFrom(msg.sender, address(this), tokensPay);
         }
@@ -158,4 +161,7 @@ contract TicketingSystem {
 
         // emit TicketsTransferred(_fromEventId, _toEventId, msg.sender, msg.sender, _ticketsToTransfer);
     }
+
+    receive() external payable {}
+    fallback() external payable {}
 }
