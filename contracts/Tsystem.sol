@@ -2,6 +2,8 @@
 pragma solidity ^0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import "hardhat/console.sol";
 
 contract TCKToken is ERC20 {
     constructor(uint256 initialSupply) ERC20("TICKET", "TCK") {
@@ -28,14 +30,23 @@ contract TicketingSystem {
         uint256 eventId;
         string name;
         uint256 ticketsAvailable;
-        uint256 price;
+        uint256 price;  //in wei
         bool active;
+    }
+
+    struct UserTickets {
+        uint256 eventId;
+        string name;
+        uint256 ticketsOwned;
     }
 
     mapping(uint256 => Event) public events;
     uint256 private eventIdCounter;
+
     address public owner;
     TCKToken private token;
+    //AggregatorV3Interface internal dataFeed;
+
 
     event EventCreated(uint256 eventId, string name, uint256 ticketsAvailable, uint256 price);
     event EventRemoved(uint256 eventId);
@@ -45,6 +56,9 @@ contract TicketingSystem {
     constructor() {
         owner = msg.sender;
         token = new TCKToken(1000);
+        // dataFeed = AggregatorV3Interface(
+        //     0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43
+        // );
         //msg.sender !== contract address. On Token contractAddress=1000 msg.sender=200
     }
 
@@ -72,13 +86,14 @@ contract TicketingSystem {
 
     function removeEvent(uint256 _eventId) external onlyOwner {
         require(_eventId < eventIdCounter, "Invalid event ID");
-        delete events[_eventId];
+        events[_eventId].active=false;
         emit EventRemoved(_eventId);
     }
 
     function setEventStatus(uint256 _eventId, bool status) external onlyOwner {
         require(_eventId < eventIdCounter, "Invalid event ID");
         events[_eventId].active = status;
+        console.log(events[_eventId].name);
     }
 
     function getEventList() external view onlyOwner returns(EventInfo[] memory){
@@ -88,20 +103,47 @@ contract TicketingSystem {
         }
         return result;
     }
-    function purchaseTickets(uint256 _eventId, uint256 _ticketsToBuy) external {
-        // require(_eventId < eventIdCounter, "Invalid event ID");
-        // Event storage selectedEvent = events[_eventId];
-        // require(selectedEvent.active, "Event is not active");
-        // require(selectedEvent.ticketsAvailable >= _ticketsToBuy, "Not enough tickets available");
-        // uint256 cost = _ticketsToBuy * selectedEvent.price;
-        // require(token.balanceOf(msg.sender) >= cost, "Insufficient balance");
+    function purchaseTickets(uint256 _eventId, uint256 _ticketsToBuy, uint256 tokensPay) external payable{// working with 2 decimals
+        require(_eventId < eventIdCounter, "Invalid event ID");
+        Event storage selectedEvent = events[_eventId];
+        require(selectedEvent.active, "Event is not active");
+        require(selectedEvent.ticketsAvailable <= _ticketsToBuy, "Not enough tickets available");
+        require(tokensPay > getTotalSupplyUser(msg.sender), "Not enough tokens in your account");
 
-        // token.transferFrom(msg.sender, address(this), cost);
-        // selectedEvent.ticketsOwned[msg.sender] += _ticketsToBuy;
-        // selectedEvent.ticketsAvailable -= _ticketsToBuy;
+        uint256 cost = (_ticketsToBuy * selectedEvent.price)*100 - (tokensPay*5 * 27639580);//solidity support for froating. is 276395.80 *100
+        require(msg.value < cost, "Not enough money send");
+        if(tokensPay > 0){
+            token.transferFrom(msg.sender, address(this), tokensPay);
+        }
+        selectedEvent.ticketsOwned[msg.sender] += _ticketsToBuy;
+        selectedEvent.ticketsAvailable -= _ticketsToBuy;
 
-        // emit TicketsPurchased(_eventId, msg.sender, _ticketsToBuy);
+        emit TicketsPurchased(_eventId, msg.sender, _ticketsToBuy);
     }
+
+    function getUsersTickets() external view returns(UserTickets[] memory){
+        UserTickets[] memory result = new UserTickets[](eventIdCounter);
+        for(uint256 i=0; i< eventIdCounter; i++){
+            if(events[i].active == true){
+                if(events[i].ticketsOwned[msg.sender]>0){
+                    result[i] = UserTickets(i, events[i].name, events[i].ticketsOwned[msg.sender]);
+                }
+            }
+        }
+        return result;
+    }
+
+    // function getChainlinkDataFeedLatestAnswer() public view returns (int) {
+    //     // prettier-ignore
+    //     (
+    //         /* uint80 roundID */,
+    //         int answer,
+    //         /*uint startedAt*/,
+    //         /*uint timeStamp*/,
+    //         /*uint80 answeredInRound*/
+    //     ) = dataFeed.latestRoundData();
+    //     return answer;
+    // }
 
     function transferTickets(uint256 _fromEventId, uint256 _toEventId, uint256 _ticketsToTransfer) external {
         // require(_fromEventId < eventIdCounter && _toEventId < eventIdCounter, "Invalid event IDs");
