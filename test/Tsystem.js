@@ -45,9 +45,8 @@ describe("Test contract Token", function () {
     expect(eventList.length).to.equal(4);
 
 
-    console.log(addr1)
+    await contract.purchaseTickets(0,1,0, { from: addr1 , value: ethToWei });
 
-    await contract.purchaseTickets(0,1,0, { value: ethToWei });
     eventList = await contract.getEventList();    
     expect(eventList[0].ticketsAvailable).to.equal(9);
 
