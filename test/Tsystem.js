@@ -45,10 +45,18 @@ describe("Test contract Token", function () {
     expect(eventList.length).to.equal(4);
 
 
-    await contract.purchaseTickets(0,1,0, { from: addr1 , value: ethToWei });
+    console.log(owner)
+    await contract.connect(addr1).purchaseTickets(0,1,0, { from: addr1 , value: ethToWei });
+    await contract.connect(addr1).purchaseTickets(2,3,0, { from: addr1 , value: "51749209530824421" });
 
-    eventList = await contract.getEventList();    
+
+
+    eventList = await contract.connect(addr1).getEventList();    
     expect(eventList[0].ticketsAvailable).to.equal(9);
+    expect(eventList[2].ticketsAvailable).to.equal(30);
+
+    const userTickets = await contract.connect(addr1).getUsersTickets();
+    console.log(userTickets)
 
   });
 

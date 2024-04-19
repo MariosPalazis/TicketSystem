@@ -95,7 +95,7 @@ contract TicketingSystem {
         events[_eventId].active = status;
     }
 
-    function getEventList() external view onlyOwner returns(EventInfo[] memory){
+    function getEventList() external view returns(EventInfo[] memory){
         EventInfo[] memory result = new EventInfo[](eventIdCounter);
         for(uint256 i=0; i< eventIdCounter; i++){
             result[i] = EventInfo(i, events[i].name, events[i].ticketsAvailable, events[i].price, events[i].active);
@@ -113,7 +113,6 @@ contract TicketingSystem {
         }
 
         uint256 cost = (_ticketsToBuy * selectedEvent.price) - (tokensPay * 5 * 55279);//solidity support for froating. is 276395.80 *100
-        console.log(msg.value , cost);
         require(msg.value >= cost, "Not enough money send");
         if(tokensPay > 0){
             token.transferFrom(msg.sender, address(this), tokensPay);
@@ -126,12 +125,17 @@ contract TicketingSystem {
 
     function getUsersTickets() external view returns(UserTickets[] memory){
         UserTickets[] memory result = new UserTickets[](eventIdCounter);
+        uint128 n = 0;
         for(uint256 i=0; i< eventIdCounter; i++){
             if(events[i].active == true){
                 if(events[i].ticketsOwned[msg.sender]>0){
-                    result[i] = UserTickets(i, events[i].name, events[i].ticketsOwned[msg.sender]);
+                    result[n] = UserTickets(i, events[i].name, events[i].ticketsOwned[msg.sender]);
+                    n++;
                 }
             }
+        }
+        assembly {
+            mstore(result, n)
         }
         return result;
     }
