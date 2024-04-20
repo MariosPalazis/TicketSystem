@@ -43,6 +43,7 @@ contract TicketingSystem {
     mapping(uint256 => Event) public events;
     uint256 private eventIdCounter;
 
+    uint256 private rewardLimit = 6422588999999864;
     address public owner;
     TCKToken private token;
     //AggregatorV3Interface internal dataFeed;
@@ -70,8 +71,8 @@ contract TicketingSystem {
     function getTotalSupply() public view returns(uint256){ //add onlyOwner
         return token.totalSupply();
     }
-    function getTotalSupplyUser(address addr) public view returns(uint256){ //add onlyOwner
-        return token.balanceOf(addr);
+    function getTotalSupplyUser() public view returns(uint256){ //add onlyOwner
+        return token.balanceOf(msg.sender);
     }
 
     function createEvent(string memory _name, uint256 _ticketsAvailable, uint256 _price) external onlyOwner {
@@ -109,16 +110,24 @@ contract TicketingSystem {
         require(selectedEvent.active, "Event is not active");
         require(selectedEvent.ticketsAvailable >= _ticketsToBuy, "Not enough tickets available");
         if(tokensPay>0){
-            require(tokensPay <= getTotalSupplyUser(msg.sender), "Not enough tokens in your account");
+            require(tokensPay <= getTotalSupplyUser(), "Not enough tokens in your account");
         }
+        console.log(_ticketsToBuy, selectedEvent.price);
 
         uint256 cost = (_ticketsToBuy * selectedEvent.price) - (tokensPay * 5 * 55279);//solidity support for froating. is 276395.80 *100
+        console.log(cost, msg.value);
         require(msg.value >= cost, "Not enough money send");
         if(tokensPay > 0){
             token.transferFrom(msg.sender, address(this), tokensPay);
         }
         selectedEvent.ticketsOwned[msg.sender] += _ticketsToBuy;
         selectedEvent.ticketsAvailable -= _ticketsToBuy;
+        console.log("div ",msg.value , rewardLimit);
+        if(msg.value >= rewardLimit){
+            uint256 rewardTokens = msg.value / rewardLimit;
+            console.log(rewardTokens);
+            token.transfer(msg.sender, rewardTokens);
+        }
 
         emit TicketsPurchased(_eventId, msg.sender, _ticketsToBuy);
     }

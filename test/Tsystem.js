@@ -45,11 +45,38 @@ describe("Test contract Token", function () {
     expect(eventList.length).to.equal(4);
 
 
-    console.log(owner)
+  });
+
+});
+
+describe("User purchase tickets + tokens", function () {
+  let contract;
+  let owner;
+  let addr1;
+  let addr2;
+
+  const ethToWei = web3.utils.toWei(0.001724973651027, 'ether');
+  const ethToWei2 = web3.utils.toWei(0.0052094367209715, 'ether');
+  const ethToWei4 = web3.utils.toWei(0.0069, 'ether');
+
+
+  beforeEach(async function () {
+    // Create the smart contract object to test from
+    [owner , addr1, addr2] = await ethers.getSigners();
+    const TestContract = await ethers.getContractFactory("TicketingSystem");
+    contract = await TestContract.deploy();
+
+    console.log("eth->wei  ",ethToWei, ethToWei2, ethToWei4)
+    await contract.createEvent("eve1", 10, ethToWei);
+    await contract.createEvent("eve2", 14, ethToWei);
+    await contract.createEvent("eve2", 33, ethToWei);
+    // await contract.createEvent("eve3", 33, '276396');
+    await contract.createEvent("eve4", 44, ethToWei2);
+  });
+
+  it("Buy tickets", async function () {
     await contract.connect(addr1).purchaseTickets(0,1,0, { from: addr1 , value: ethToWei });
     await contract.connect(addr1).purchaseTickets(2,3,0, { from: addr1 , value: "51749209530824421" });
-
-
 
     eventList = await contract.connect(addr1).getEventList();    
     expect(eventList[0].ticketsAvailable).to.equal(9);
@@ -57,7 +84,13 @@ describe("Test contract Token", function () {
 
     const userTickets = await contract.connect(addr1).getUsersTickets();
     console.log(userTickets)
+  })
 
-  });
+  it("Buy tickets with token", async function () {
+      await contract.connect(addr2).purchaseTickets(0,4,0, { value: ethToWei4 });
+      const userTickets = await contract.connect(addr2).getUsersTickets();
+      console.log(userTickets)
+      expect(await contract.connect(addr2).getTotalSupplyUser()).to.equal(1);
+  })
 
 });
