@@ -112,20 +112,16 @@ contract TicketingSystem {
         if(tokensPay>0){
             require(tokensPay <= getTotalSupplyUser(), "Not enough tokens in your account");
         }
-        console.log(_ticketsToBuy, selectedEvent.price);
 
         uint256 cost = (_ticketsToBuy * selectedEvent.price) - (tokensPay * 5 * 55279);//solidity support for froating. is 276395.80 *100
-        console.log(cost, msg.value);
         require(msg.value >= cost, "Not enough money send");
         if(tokensPay > 0){
             token.transferFrom(msg.sender, address(this), tokensPay);
         }
         selectedEvent.ticketsOwned[msg.sender] += _ticketsToBuy;
         selectedEvent.ticketsAvailable -= _ticketsToBuy;
-        console.log("div ",msg.value , rewardLimit);
         if(msg.value >= rewardLimit){
             uint256 rewardTokens = msg.value / rewardLimit;
-            console.log(rewardTokens);
             token.transfer(msg.sender, rewardTokens);
         }
 
@@ -147,32 +143,6 @@ contract TicketingSystem {
             mstore(result, n)
         }
         return result;
-    }
-
-    // function getChainlinkDataFeedLatestAnswer() public view returns (int) {
-    //     // prettier-ignore
-    //     (
-    //         /* uint80 roundID */,
-    //         int answer,
-    //         /*uint startedAt*/,
-    //         /*uint timeStamp*/,
-    //         /*uint80 answeredInRound*/
-    //     ) = dataFeed.latestRoundData();
-    //     return answer;
-    // }
-
-    function transferTickets(uint256 _fromEventId, uint256 _toEventId, uint256 _ticketsToTransfer) external {
-        // require(_fromEventId < eventIdCounter && _toEventId < eventIdCounter, "Invalid event IDs");
-
-        // Event storage fromEvent = events[_fromEventId];
-        // Event storage toEvent = events[_toEventId];
-
-        // require(fromEvent.ticketsOwned[msg.sender] >= _ticketsToTransfer, "Not enough tickets to transfer");
-
-        // fromEvent.ticketsOwned[msg.sender] -= _ticketsToTransfer;
-        // toEvent.ticketsOwned[msg.sender] += _ticketsToTransfer;
-
-        // emit TicketsTransferred(_fromEventId, _toEventId, msg.sender, msg.sender, _ticketsToTransfer);
     }
 
     receive() external payable {}
