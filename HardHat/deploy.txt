@@ -1,0 +1,1 @@
+Deploy to sepolia via npx hardhat ignition deploy ./ignition/modules/Tsystem.js --network sepolia
