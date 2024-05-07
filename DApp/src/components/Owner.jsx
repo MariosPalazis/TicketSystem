@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { ethers } from 'ethers';
+import Web3 from 'web3';
+
 
 export default function Owner() {
     const [provider, setProvider] = useState(null);
@@ -7,6 +9,10 @@ export default function Owner() {
     const [balance, setBalance] = useState(null);
 
     const [contract, setContract] = useState(null);
+    const [contractWithSigner, setContractWithSigner] = useState(null);
+    const [eventList, setEventList] = useState(["m","n"]);
+
+
 
     const contractAddress  = "0x9E6B90f4e859DDc48f396511fcdFA5721fCbe1D9";
     const abi = [
@@ -354,13 +360,19 @@ export default function Owner() {
 
 
     useEffect(() => {
+
         async function fetchInfo() {
             const contract = new ethers.Contract(contractAddress, abi, provider); // Instantiate the contract
             const signer = await new ethers.BrowserProvider(window.ethereum).getSigner(); // Assumes Metamask or similar is injected in the browser
             const weiValue = await new ethers.BrowserProvider(window.ethereum).getBalance(signer.address);
+            const contractWithSigner = contract.connect(await signer);
             setContract(contract);
             setAccount(signer);
-            setBalance(ethers.utils.formatEther(balance))
+            setBalance(weiValue.toString())
+            setContractWithSigner(contractWithSigner)
+            const eventListD = await contractWithSigner.getEventList();
+            console.log(eventListD)
+            setEventList(eventListD)
         }
 
         if (typeof window !== "undefined") {
@@ -369,18 +381,25 @@ export default function Owner() {
                 fetchInfo();
             } else {
                 console.error("Please install MetaMask!");
+                alert("Please install MetaMask!")
             }
         }
         
         //const contractWithSigner = contract.connect(await signer);
     }, []);
 
+  const weiToEther = () =>{
+    return Web3.utils.fromWei(balance, 'ether');
+  }
 
   return (
     <>
         <div className='info'>
             <div className='infoDetail'>Your account is {account && account.address}</div>
-            <div className='infoDetail'>{balance} wei</div>
+            <div className='infoDetail'>{balance && balance} wei  or {balance && weiToEther()} ether</div>
+        </div>
+        <div className='eventsList'>
+            {eventList}
         </div>
     </>
   )
