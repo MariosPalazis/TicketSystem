@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react'
 import { ethers } from 'ethers';
-import './App.css';
-import { Routes, Route, Outlet, Link } from "react-router-dom";
-import Layout from './components/Layout';
-import Owner from './components/Owner';
-import User from './components/User';
-import NoMatch from './components/NoMatch';
 
+export default function Owner() {
+    const [provider, setProvider] = useState(null);
+    const [account, setAccount] = useState(null);
+    const [balance, setBalance] = useState(null);
 
-function App() {
-  const contractAddress  = "0x9E6B90f4e859DDc48f396511fcdFA5721fCbe1D9";
-  const abi = [
+    const [contract, setContract] = useState(null);
+
+    const contractAddress  = "0x9E6B90f4e859DDc48f396511fcdFA5721fCbe1D9";
+    const abi = [
     {
       "inputs": [],
       "stateMutability": "nonpayable",
@@ -350,35 +349,39 @@ function App() {
       "stateMutability": "payable",
       "type": "receive"
     }
-  ]
-  const [status, setStatus] = useState("");
+    ]
 
 
 
-  const getList = async () => {
-   
-    
-    
-    try {
-      const tx = await contractWithSigner.getEventList();
-      console.log(tx)
-    } catch (err) {
-      console.error(err);
-      setStatus("Error: " + err.message);
-    }
-  };
+    useEffect(() => {
+        async function fetchInfo() {
+            const contract = new ethers.Contract(contractAddress, abi, provider); // Instantiate the contract
+            const signer = await new ethers.BrowserProvider(window.ethereum).getSigner(); // Assumes Metamask or similar is injected in the browser
+            const weiValue = await new ethers.BrowserProvider(window.ethereum).getBalance(signer.address);
+            setContract(contract);
+            setAccount(signer);
+            setBalance(ethers.utils.formatEther(balance))
+        }
+
+        if (typeof window !== "undefined") {
+            if (window.ethereum) {
+                setProvider(new ethers.BrowserProvider(window.ethereum)); 
+                fetchInfo();
+            } else {
+                console.error("Please install MetaMask!");
+            }
+        }
+        
+        //const contractWithSigner = contract.connect(await signer);
+    }, []);
+
 
   return (
-      <div className="App">
-          <Routes>
-              <Route path="/" element={<Layout />}>
-              <Route index element={<Owner />} />
-              <Route path="user" element={<User />} />
-              <Route path="*" element={<NoMatch />} />
-            </Route>
-          </Routes>
-      </div>
+    <>
+        <div className='info'>
+            <div className='infoDetail'>Your account is {account && account.address}</div>
+            <div className='infoDetail'>{balance} wei</div>
+        </div>
+    </>
   )
 }
-
-export default App;
