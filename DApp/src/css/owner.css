@@ -1,7 +1,49 @@
+.eventSection{
+    width: 100%;
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+
 .eventsList{
-    width: 80%;
+    width: 60%;
     display: flex;
     flex-flow: column;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+.eventForm{
+    width: 40%;
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 20px;
+}
+.form{
+    width: 100%;
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.fieldSection{
+    margin: 5px;
+}
+.fieldSection input{
+    margin-left: 5px;
+}
+.create{
+    padding: 4px 12px;
+    border: 1px solid rgb(152, 152, 170);
+    background-color: rgb(120, 120, 168);
+    cursor: pointer;
+    color: white;
+    margin: 10px 0px 0px 10px;
 }

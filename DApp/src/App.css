@@ -46,6 +46,10 @@ header{
   align-items: center;
   height: 50px;
 }
-.infoDetail{
-
+.subTitle{
+  font-weight: 600;
+  font-size: 18px;
+}
+hr{
+  width: 100%;
 }

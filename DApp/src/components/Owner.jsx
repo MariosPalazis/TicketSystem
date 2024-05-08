@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { ethers } from 'ethers';
 import Web3 from 'web3';
+import "../css/owner.css"
 
 
 export default function Owner() {
@@ -10,7 +11,8 @@ export default function Owner() {
 
     const [contract, setContract] = useState(null);
     const [contractWithSigner, setContractWithSigner] = useState(null);
-    const [eventList, setEventList] = useState(["m","n"]);
+    const [eventList, setEventList] = useState([]);
+    const [createEvent, setCreateEvent] = useState({name:"", capacity: 0, price: 0})
 
 
 
@@ -391,6 +393,28 @@ export default function Owner() {
   const weiToEther = () =>{
     return Web3.utils.fromWei(balance, 'ether');
   }
+  const updateForm = (e) =>{
+    setCreateEvent((prevEvent => ({
+      ...prevEvent,
+      [e.target.name]: e.target.value
+    })));
+  }
+
+  const submit = async (e) =>{
+    e.preventDefault()
+    /* do validations */
+    let amount = Web3.utils.toWei(createEvent.price, 'ether');
+    amount = amount.toString();
+    let numb = parseInt(createEvent.capacity)
+    try{
+      const createEv = await contractWithSigner.createEvent(createEvent.name, numb, amount)
+      await createEv.wait()
+    }catch(err){
+      console.log(err)
+    }
+    
+    console.log('finish')
+  }
 
   return (
     <>
@@ -398,9 +422,38 @@ export default function Owner() {
             <div className='infoDetail'>Your account is {account && account.address}</div>
             <div className='infoDetail'>{balance && balance} wei  or {balance && weiToEther()} ether</div>
         </div>
-        <div className='eventsList'>
-            {eventList}
+        <hr />
+        <div className='eventSection'>
+          <div className='eventsList'>
+              <div className='subTitle'>Event List</div>
+              {eventList}
+          </div>
+          <div className='eventForm'>
+              <div className='subTitle'>Create new event</div>
+              <div className='form'>
+                  <div className='fieldSection'>
+                    <label>
+                      Event name:
+                      <input name="name" onChange={updateForm}/>
+                    </label>
+                  </div>
+                  <div className='fieldSection'>
+                    <label>
+                      Ticket number:
+                      <input name="capacity" type='number' onChange={updateForm} />
+                    </label>
+                  </div>
+                  <div className='fieldSection'>
+                    <label>
+                      Ticket price (ether):
+                      <input name="price" type='number' onChange={updateForm} />
+                    </label>
+                  </div>
+                  <div className='create' onClick={submit}>Create</div>
+              </div>
+          </div>
         </div>
+        
     </>
   )
 }
