@@ -373,8 +373,11 @@ export default function Owner() {
             setBalance(weiValue.toString())
             setContractWithSigner(contractWithSigner)
             const eventListD = await contractWithSigner.getEventList();
-            console.log(eventListD)
-            setEventList(eventListD)
+            setEventList(JSON.parse(JSON.stringify(eventListD, (key, value) =>
+              typeof value === 'bigint'
+                  ? value.toString()
+                  : value // return everything else unchanged
+          )))
         }
 
         if (typeof window !== "undefined") {
@@ -426,7 +429,14 @@ export default function Owner() {
         <div className='eventSection'>
           <div className='eventsList'>
               <div className='subTitle'>Event List</div>
-              {eventList}
+              <div className='eventRow'>
+                <div className='eventCol'>Event Id</div> <div className='eventCol'>Name</div> <div className='eventCol'>Available Tickets</div> <div className='eventCol'>Price (ether)</div> <div className='eventCol'>Remove</div>
+              </div>
+              {eventList.map((ev, key)=>(
+                <div className='eventRow' key={key}>
+                  <div className='eventCol'>{ev[0]}</div> <div className='eventCol'>{ev[1]}</div> <div className='eventCol'>{ev[2]}</div> <div className='eventCol'>{ev[3]}</div><div className='eventCol'>Click to removeEvent</div>
+                </div>
+              ))}
           </div>
           <div className='eventForm'>
               <div className='subTitle'>Create new event</div>
@@ -453,6 +463,8 @@ export default function Owner() {
               </div>
           </div>
         </div>
+        <hr />
+
         
     </>
   )

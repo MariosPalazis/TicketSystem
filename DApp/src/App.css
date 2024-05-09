@@ -18,6 +18,7 @@ header{
   height: 80px;
   background-color: rgb(0, 14, 58);
   padding: 25px;
+  margin: 20px auto;
 }
 
 .layout{
