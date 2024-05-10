@@ -90,6 +90,12 @@ describe("User purchase tickets + tokens", function () {
       await contract.connect(addr2).purchaseTickets(0,4,0, { value: ethToWei4 });
       const userTickets = await contract.connect(addr2).getUsersTickets();
       console.log(userTickets)
+      console.log(await contract.connect(addr2).getTotalSupplyUser())
+      console.log(await contract.connect(addr1).getTotalSupplyUser())
+      console.log(await contract.connect(addr1).getRemainSupply())
+      console.log(await contract.connect(addr2).getTotalSupply())
+
+
       expect(await contract.connect(addr2).getTotalSupplyUser()).to.equal(1);
   })
 

@@ -74,6 +74,9 @@ contract TicketingSystem {
     function getTotalSupplyUser() public view returns(uint256){ //add onlyOwner
         return token.balanceOf(msg.sender);
     }
+    function getRemainSupply() public view returns(uint256){ //add onlyOwner
+        return token.balanceOf(address(this));
+    }
 
     function createEvent(string memory _name, uint256 _ticketsAvailable, uint256 _price) external onlyOwner {
         Event storage newEvent = events[eventIdCounter];
@@ -116,13 +119,17 @@ contract TicketingSystem {
         uint256 cost = (_ticketsToBuy * selectedEvent.price) - (tokensPay * 5 * 55279);//solidity support for froating. is 276395.80 *100
         require(msg.value >= cost, "Not enough money send");
         if(tokensPay > 0){
+            token.approve(msg.sender, tokensPay);
             token.transferFrom(msg.sender, address(this), tokensPay);
         }
         selectedEvent.ticketsOwned[msg.sender] += _ticketsToBuy;
         selectedEvent.ticketsAvailable -= _ticketsToBuy;
         if(msg.value >= rewardLimit){
             uint256 rewardTokens = msg.value / rewardLimit;
-            token.transfer(msg.sender, rewardTokens);
+            if(rewardTokens>0){
+                token.approve(address(this), rewardTokens);
+                token.transferFrom(address(this), msg.sender, rewardTokens);
+            }
         }
 
         emit TicketsPurchased(_eventId, msg.sender, _ticketsToBuy);

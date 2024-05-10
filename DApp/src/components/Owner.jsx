@@ -12,7 +12,11 @@ export default function Owner() {
     const [contract, setContract] = useState(null);
     const [contractWithSigner, setContractWithSigner] = useState(null);
     const [eventList, setEventList] = useState([]);
-    const [createEvent, setCreateEvent] = useState({name:"", capacity: 0, price: 0})
+    const [createEvent, setCreateEvent] = useState({name:"", capacity: 0, price: 0});
+
+    const [totalSupply, setTotalSupply] = useState(null);
+    const [ownerSupply, setOwnerSupply] = useState(null);
+
 
 
 
@@ -377,7 +381,11 @@ export default function Owner() {
               typeof value === 'bigint'
                   ? value.toString()
                   : value // return everything else unchanged
-          )))
+          )));
+          const totalSup = await contractWithSigner.getTotalSupply();
+          const OwnerSup = await contractWithSigner.getTotalSupplyUser();
+          setTotalSupply(totalSup.toString());
+          setOwnerSupply(OwnerSup.toString());
         }
 
         if (typeof window !== "undefined") {
@@ -464,7 +472,23 @@ export default function Owner() {
           </div>
         </div>
         <hr />
+        <div className='tokenSection'>
+          <div className='eventsList'>
+            <div className='subTitle'>Tokens TCK</div>
+            <div className='fieldSection'>
+              <label>
+                Total Supply: {totalSupply} tokens
+              </label>
+            </div>
+            <div className='fieldSection'>
+              <label>
+                Owner Supply: {ownerSupply}
+              </label>
+            </div>
+          </div>
+          
 
+        </div>
         
     </>
   )

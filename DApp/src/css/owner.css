@@ -62,3 +62,12 @@
     width: 20%;
     min-width: 150px;
 }
+
+.tokenSection{
+    width: 100%;
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 20px;
+}
