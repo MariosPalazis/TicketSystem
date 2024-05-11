@@ -62,7 +62,10 @@
     width: 20%;
     min-width: 150px;
 }
-
+.imgStyle{
+    margin-top: 3px;
+    cursor: pointer;
+}
 .tokenSection{
     width: 100%;
     display: flex;

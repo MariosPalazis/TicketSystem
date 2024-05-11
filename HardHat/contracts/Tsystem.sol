@@ -68,13 +68,13 @@ contract TicketingSystem {
         _;
     }
 
-    function getTotalSupply() public view returns(uint256){ //add onlyOwner
+    function getTotalSupply() public view onlyOwner returns(uint256){ //add onlyOwner
         return token.totalSupply();
     }
-    function getTotalSupplyUser() public view returns(uint256){ //add onlyOwner
+    function getTotalSupplyUser() public view onlyOwner returns(uint256){ //add onlyOwner
         return token.balanceOf(msg.sender);
     }
-    function getRemainSupply() public view returns(uint256){ //add onlyOwner
+    function getRemainSupply() external view onlyOwner returns(uint256){ //add onlyOwner
         return token.balanceOf(address(this));
     }
 

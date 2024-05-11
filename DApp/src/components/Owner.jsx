@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { ethers } from 'ethers';
+import { ethers, fromTwos } from 'ethers';
 import Web3 from 'web3';
-import "../css/owner.css"
-
+import deleteImg from '../assets/delete.svg';
+import GridLoader from "react-spinners/GridLoader";
+import "../css/owner.css";
 
 export default function Owner() {
     const [provider, setProvider] = useState(null);
@@ -16,7 +17,8 @@ export default function Owner() {
 
     const [totalSupply, setTotalSupply] = useState(null);
     const [ownerSupply, setOwnerSupply] = useState(null);
-
+    const [stateUpdate, setStateUpdate] = useState(0);
+    const [loading, setLoading] = useState(true);
 
 
 
@@ -397,12 +399,13 @@ export default function Owner() {
                 alert("Please install MetaMask!")
             }
         }
+        setLoading(false);
         
         //const contractWithSigner = contract.connect(await signer);
-    }, []);
+    }, [stateUpdate]);
 
-  const weiToEther = () =>{
-    return Web3.utils.fromWei(balance, 'ether');
+  const weiToEther = (wei) =>{
+    return Web3.utils.fromWei(wei, 'ether');
   }
   const updateForm = (e) =>{
     setCreateEvent((prevEvent => ({
@@ -411,7 +414,22 @@ export default function Owner() {
     })));
   }
 
+  const removeEvent = async(eventId) =>{
+    console.log(eventId)
+    setLoading(true);
+    try{
+      const createEv = await contractWithSigner.removeEvent(eventId)
+      await createEv.wait()
+    }catch(err){
+      console.log(err)
+    }
+    setStateUpdate(stateUpdate+1);
+    setLoading(false);
+  }
+
+
   const submit = async (e) =>{
+    setLoading(true);
     e.preventDefault()
     /* do validations */
     let amount = Web3.utils.toWei(createEvent.price, 'ether');
@@ -423,73 +441,82 @@ export default function Owner() {
     }catch(err){
       console.log(err)
     }
-    
-    console.log('finish')
+    setStateUpdate(stateUpdate+1);
+    setLoading(false);
   }
 
   return (
     <>
-        <div className='info'>
-            <div className='infoDetail'>Your account is {account && account.address}</div>
-            <div className='infoDetail'>{balance && balance} wei  or {balance && weiToEther()} ether</div>
-        </div>
-        <hr />
-        <div className='eventSection'>
-          <div className='eventsList'>
-              <div className='subTitle'>Event List</div>
-              <div className='eventRow'>
-                <div className='eventCol'>Event Id</div> <div className='eventCol'>Name</div> <div className='eventCol'>Available Tickets</div> <div className='eventCol'>Price (ether)</div> <div className='eventCol'>Remove</div>
+        {
+          loading
+          ?<GridLoader
+            loading={loading}
+            size={150}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+          :
+          <>
+            <div className='info'>
+                <div className='infoDetail'>Your account is {account && account.address}</div>
+                <div className='infoDetail'>{balance && balance} wei  or {balance && weiToEther(balance)} ether</div>
+            </div>
+            <hr />
+            <div className='eventSection'>
+              <div className='eventsList'>
+                  <div className='subTitle'>Event List</div>
+                  <div className='eventRow'>
+                    <div className='eventCol'>Event Id</div> <div className='eventCol'>Name</div> <div className='eventCol'>Available Tickets</div> <div className='eventCol'>Price (ether)</div> <div className='eventCol'>Remove</div>
+                  </div>
+                  {eventList.map((ev, key)=>(
+                    <div className='eventRow' key={key}>
+                      <div className='eventCol'>{ev[0]}</div> <div className='eventCol'>{ev[1]}</div> <div className='eventCol'>{ev[2]}</div> <div className='eventCol'>{weiToEther(ev[3])}</div><div className='eventCol'><img src={deleteImg} className='imgStyle' alt="Delete" onClick={()=>{removeEvent(ev[0])}} /></div>
+                    </div>
+                  ))}
               </div>
-              {eventList.map((ev, key)=>(
-                <div className='eventRow' key={key}>
-                  <div className='eventCol'>{ev[0]}</div> <div className='eventCol'>{ev[1]}</div> <div className='eventCol'>{ev[2]}</div> <div className='eventCol'>{ev[3]}</div><div className='eventCol'>Click to removeEvent</div>
+              <div className='eventForm'>
+                  <div className='subTitle'>Create new event</div>
+                  <div className='form'>
+                      <div className='fieldSection'>
+                        <label>
+                          Event name:
+                          <input name="name" onChange={updateForm}/>
+                        </label>
+                      </div>
+                      <div className='fieldSection'>
+                        <label>
+                          Ticket number:
+                          <input name="capacity" type='number' onChange={updateForm} />
+                        </label>
+                      </div>
+                      <div className='fieldSection'>
+                        <label>
+                          Ticket price (ether):
+                          <input name="price" type='number' onChange={updateForm} />
+                        </label>
+                      </div>
+                      <div className='create' onClick={submit}>Create</div>
+                  </div>
+              </div>
+            </div>
+            <hr />
+            <div className='tokenSection'>
+              <div className='eventsList'>
+                <div className='subTitle'>Tokens TCK</div>
+                <div className='fieldSection'>
+                  <label>
+                    Total Supply: {totalSupply} tokens
+                  </label>
                 </div>
-              ))}
-          </div>
-          <div className='eventForm'>
-              <div className='subTitle'>Create new event</div>
-              <div className='form'>
-                  <div className='fieldSection'>
-                    <label>
-                      Event name:
-                      <input name="name" onChange={updateForm}/>
-                    </label>
-                  </div>
-                  <div className='fieldSection'>
-                    <label>
-                      Ticket number:
-                      <input name="capacity" type='number' onChange={updateForm} />
-                    </label>
-                  </div>
-                  <div className='fieldSection'>
-                    <label>
-                      Ticket price (ether):
-                      <input name="price" type='number' onChange={updateForm} />
-                    </label>
-                  </div>
-                  <div className='create' onClick={submit}>Create</div>
+                <div className='fieldSection'>
+                  <label>
+                    Owner Supply: {ownerSupply}
+                  </label>
+                </div>
               </div>
-          </div>
-        </div>
-        <hr />
-        <div className='tokenSection'>
-          <div className='eventsList'>
-            <div className='subTitle'>Tokens TCK</div>
-            <div className='fieldSection'>
-              <label>
-                Total Supply: {totalSupply} tokens
-              </label>
             </div>
-            <div className='fieldSection'>
-              <label>
-                Owner Supply: {ownerSupply}
-              </label>
-            </div>
-          </div>
-          
-
-        </div>
-        
+          </>
+        }
     </>
   )
 }
