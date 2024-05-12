@@ -43,7 +43,7 @@ contract TicketingSystem {
     mapping(uint256 => Event) public events;
     uint256 private eventIdCounter;
 
-    uint256 private rewardLimit = 6422588999999864;
+    uint256 public rewardLimit = 6422588999999864;
     address public owner;
     TCKToken private token;
     //AggregatorV3Interface internal dataFeed;
@@ -71,12 +71,18 @@ contract TicketingSystem {
     function getTotalSupply() public view onlyOwner returns(uint256){ //add onlyOwner
         return token.totalSupply();
     }
-    function getTotalSupplyUser() public view onlyOwner returns(uint256){ //add onlyOwner
+    function getTotalSupplyUser() public view returns(uint256){ //add onlyOwner
         return token.balanceOf(msg.sender);
     }
     function getRemainSupply() external view onlyOwner returns(uint256){ //add onlyOwner
         return token.balanceOf(address(this));
     }
+
+    function changeRewardLimit(uint256 _rewardLimit) external onlyOwner{
+        require(_rewardLimit > 0, "Reward Limit must be above 0");
+        rewardLimit = _rewardLimit;
+    }
+
 
     function createEvent(string memory _name, uint256 _ticketsAvailable, uint256 _price) external onlyOwner {
         Event storage newEvent = events[eventIdCounter];

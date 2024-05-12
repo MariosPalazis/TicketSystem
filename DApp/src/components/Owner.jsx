@@ -9,7 +9,7 @@ export default function Owner() {
     const [provider, setProvider] = useState(null);
     const [account, setAccount] = useState(null);
     const [balance, setBalance] = useState(null);
-
+    const [rewardLimit, setRewardLimit] = useState(0);
     const [contract, setContract] = useState(null);
     const [contractWithSigner, setContractWithSigner] = useState(null);
     const [eventList, setEventList] = useState([]);
@@ -468,11 +468,15 @@ export default function Owner() {
                   <div className='eventRow'>
                     <div className='eventCol'>Event Id</div> <div className='eventCol'>Name</div> <div className='eventCol'>Available Tickets</div> <div className='eventCol'>Price (ether)</div> <div className='eventCol'>Remove</div>
                   </div>
-                  {eventList.map((ev, key)=>(
-                    <div className='eventRow' key={key}>
-                      <div className='eventCol'>{ev[0]}</div> <div className='eventCol'>{ev[1]}</div> <div className='eventCol'>{ev[2]}</div> <div className='eventCol'>{weiToEther(ev[3])}</div><div className='eventCol'><img src={deleteImg} className='imgStyle' alt="Delete" onClick={()=>{removeEvent(ev[0])}} /></div>
-                    </div>
-                  ))}
+                  {eventList.map((ev, key)=>{
+                    {
+                      if(ev[4]){
+                        return <div className='eventRow' key={key}>
+                                  <div className='eventCol'>{ev[0]}</div> <div className='eventCol'>{ev[1]}</div> <div className='eventCol'>{ev[2]}</div> <div className='eventCol'>{weiToEther(ev[3])}</div><div className='eventCol'><img src={deleteImg} className='imgStyle' alt="Delete" onClick={()=>{removeEvent(ev[0])}} /></div>
+                                </div>
+                      }
+                    }
+                  })}
               </div>
               <div className='eventForm'>
                   <div className='subTitle'>Create new event</div>
@@ -513,6 +517,28 @@ export default function Owner() {
                     Owner Supply: {ownerSupply}
                   </label>
                 </div>
+              </div>
+              <div className='eventsList'>
+                <div className='subTitle'>Reward Limit</div>
+                <div className='fieldSection'>
+                  <label>
+                    Current reward limit: {rewardLimit} 
+                  </label>
+                </div>
+                <div className='fieldSection'>
+                  <label>
+                    Reward Limit in ether
+                    <input name="name"/>
+                  </label>
+                </div>
+                <div className='fieldSection'>
+                  <label>
+                    Reward Limit in wei
+                    <input name="name" disabled/>
+                  </label>
+                </div>
+                <div className='create' onClick={submit}>Update</div>
+
               </div>
             </div>
           </>
