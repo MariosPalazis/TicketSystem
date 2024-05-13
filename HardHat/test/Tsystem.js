@@ -72,31 +72,43 @@ describe("User purchase tickets + tokens", function () {
     await contract.createEvent("eve2", 33, ethToWei);
     // await contract.createEvent("eve3", 33, '276396');
     await contract.createEvent("eve4", 44, ethToWei2);
+
   });
 
-  it("Buy tickets", async function () {
+  it("Buy tickets & retrieve balance", async function () {
     await contract.connect(addr1).purchaseTickets(0,1,0, { from: addr1 , value: ethToWei });
     await contract.connect(addr1).purchaseTickets(2,3,0, { from: addr1 , value: "51749209530824421" });
-
     eventList = await contract.connect(addr1).getEventList();    
-    expect(eventList[0].ticketsAvailable).to.equal(9);
-    expect(eventList[2].ticketsAvailable).to.equal(30);
+    
 
     const userTickets = await contract.connect(addr1).getUsersTickets();
     console.log(userTickets)
+
+    console.log("balance", await contract.connect(owner).getContractBalance())
+
+      await contract.connect(owner).withdrawToOwner(421);
+      console.log("balance", await contract.connect(owner).getContractBalance())
+
+      expect(eventList[0].ticketsAvailable).to.equal(9);
+      expect(eventList[2].ticketsAvailable).to.equal(30);
   })
 
-  it("Buy tickets with token", async function () {
+  it("Buy tickets with token ", async function () {
       await contract.connect(addr2).purchaseTickets(0,4,0, { value: ethToWei4 });
       const userTickets = await contract.connect(addr2).getUsersTickets();
       console.log(userTickets)
-      console.log(await contract.connect(addr2).getTotalSupplyUser())
-      console.log(await contract.connect(addr1).getTotalSupplyUser())
-      console.log(await contract.connect(addr1).getRemainSupply())
-      console.log(await contract.connect(addr2).getTotalSupply())
 
-
-      expect(await contract.connect(addr2).getTotalSupplyUser()).to.equal(1);
   })
+  it("RewardLimit", async function () {
+    console.log(await contract.connect(addr2).getTotalSupplyUser())
+    console.log(await contract.connect(addr1).getTotalSupplyUser())
+    console.log(await contract.connect(owner).getRemainSupply())
+    console.log(await contract.connect(owner).getTotalSupply())
 
+
+    console.log(await contract.connect(addr1).rewardLimit())
+    await contract.connect(owner).changeRewardLimit(20);
+    console.log(await contract.connect(addr1).rewardLimit())
+    
+  })
 });

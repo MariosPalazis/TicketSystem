@@ -56,7 +56,7 @@ contract TicketingSystem {
 
     constructor() {
         owner = msg.sender;
-        token = new TCKToken(1000);
+        token = new TCKToken(10000);
         // dataFeed = AggregatorV3Interface(
         //     0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43
         // );
@@ -68,16 +68,27 @@ contract TicketingSystem {
         _;
     }
 
-    function getTotalSupply() public view onlyOwner returns(uint256){ //add onlyOwner
+    function getTotalSupply() public view onlyOwner returns(uint256){ 
         return token.totalSupply();
     }
-    function getTotalSupplyUser() public view returns(uint256){ //add onlyOwner
+    function getTotalSupplyUser() public view returns(uint256){ 
         return token.balanceOf(msg.sender);
     }
-    function getRemainSupply() external view onlyOwner returns(uint256){ //add onlyOwner
-        return token.balanceOf(address(this));
+    function getContractBalance() external view onlyOwner returns(uint256){
+        return address(this).balance;
     }
 
+    function withdrawToOwner(uint256 _amount) external onlyOwner{
+        require(_amount <= address(this).balance, "Not enough money");
+        (bool success,)=owner.call{value: _amount}("");
+        // if it is not success, throw error
+        require(success,"Transfer failed!");
+    }
+
+
+    function getRemainSupply() external view onlyOwner returns(uint256){
+        return token.balanceOf(address(this));
+    }
     function changeRewardLimit(uint256 _rewardLimit) external onlyOwner{
         require(_rewardLimit > 0, "Reward Limit must be above 0");
         rewardLimit = _rewardLimit;
