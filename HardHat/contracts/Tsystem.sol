@@ -2,8 +2,6 @@
 pragma solidity ^0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
-import "hardhat/console.sol";
 
 contract TCKToken is ERC20 {
     constructor(uint256 initialSupply) ERC20("TICKET", "TCK") {
@@ -13,7 +11,9 @@ contract TCKToken is ERC20 {
     function mintToUser(address to, uint256 amount) external{ //add onlyOwner
         _mint(to, amount);
     }
-
+    function transferCustom(address from, address to, uint256 amount) external {
+        _transfer(from, to, amount);
+    }
 }
 
 
@@ -46,7 +46,6 @@ contract TicketingSystem {
     uint256 public rewardLimit = 6422588999999864;
     address public owner;
     TCKToken private token;
-    //AggregatorV3Interface internal dataFeed;
 
 
     event EventCreated(uint256 eventId, string name, uint256 ticketsAvailable, uint256 price);
@@ -56,11 +55,7 @@ contract TicketingSystem {
 
     constructor() {
         owner = msg.sender;
-        token = new TCKToken(10000);
-        // dataFeed = AggregatorV3Interface(
-        //     0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43
-        // );
-        //msg.sender !== contract address. On Token contractAddress=1000 msg.sender=200
+        token = new TCKToken(1000);
     }
 
     modifier onlyOwner() {
@@ -77,13 +72,12 @@ contract TicketingSystem {
     function getContractBalance() external view onlyOwner returns(uint256){
         return address(this).balance;
     }
+    
 
-    function withdrawToOwner(uint256 _amount) external onlyOwner{
-        require(_amount <= address(this).balance, "Not enough money");
-        (bool success,)=owner.call{value: _amount}("");
-        // if it is not success, throw error
-        require(success,"Transfer failed!");
-    }
+    // function withdrawToOwner(uint256 _amount) external onlyOwner{
+    //     require(_amount <= address(this).balance, "Not enough money");
+    //     payable(owner).tranfer(_amount);
+    // }
 
 
     function getRemainSupply() external view onlyOwner returns(uint256){

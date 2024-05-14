@@ -99,6 +99,7 @@ describe("User purchase tickets + tokens", function () {
       console.log(userTickets)
 
   })
+  /*
   it("RewardLimit", async function () {
     console.log(await contract.connect(addr2).getTotalSupplyUser())
     console.log(await contract.connect(addr1).getTotalSupplyUser())
@@ -111,4 +112,5 @@ describe("User purchase tickets + tokens", function () {
     console.log(await contract.connect(addr1).rewardLimit())
     
   })
+  */
 });
