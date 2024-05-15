@@ -24,5 +24,4 @@ module.exports = {
       accounts: [PRIVATE_KEY]
     }
   },
-  allowUnlimitedContractSize: true
 };

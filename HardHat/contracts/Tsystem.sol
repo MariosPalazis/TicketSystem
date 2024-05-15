@@ -63,7 +63,7 @@ contract TicketingSystem {
         _;
     }
 
-    function getTotalSupply() public view onlyOwner returns(uint256){ 
+    function getTotalSupply() external view onlyOwner returns(uint256){ 
         return token.totalSupply();
     }
     function getTotalSupplyUser() public view returns(uint256){ 
@@ -74,10 +74,11 @@ contract TicketingSystem {
     }
     
 
-    // function withdrawToOwner(uint256 _amount) external onlyOwner{
-    //     require(_amount <= address(this).balance, "Not enough money");
-    //     payable(owner).tranfer(_amount);
-    // }
+    function withdrawToOwner(uint256 _amount) external onlyOwner{
+        require(_amount <= address(this).balance, "Not enough money");
+        (bool success, ) = owner.call{value: _amount}("");
+        require(success, "Error on sending to owner");
+    }
 
 
     function getRemainSupply() external view onlyOwner returns(uint256){
@@ -130,16 +131,14 @@ contract TicketingSystem {
         uint256 cost = (_ticketsToBuy * selectedEvent.price) - (tokensPay * 5 * 55279);//solidity support for froating. is 276395.80 *100
         require(msg.value >= cost, "Not enough money send");
         if(tokensPay > 0){
-            token.approve(msg.sender, tokensPay);
-            token.transferFrom(msg.sender, address(this), tokensPay);
+            token.transferCustom(msg.sender, address(this), tokensPay);
         }
         selectedEvent.ticketsOwned[msg.sender] += _ticketsToBuy;
         selectedEvent.ticketsAvailable -= _ticketsToBuy;
         if(msg.value >= rewardLimit){
             uint256 rewardTokens = msg.value / rewardLimit;
             if(rewardTokens>0){
-                token.approve(address(this), rewardTokens);
-                token.transferFrom(address(this), msg.sender, rewardTokens);
+                token.transferCustom(address(this), msg.sender, rewardTokens);
             }
         }
 
