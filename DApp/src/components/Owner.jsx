@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ethers, fromTwos } from 'ethers';
+import { ethers } from 'ethers';
 import Web3 from 'web3';
 import deleteImg from '../assets/delete.svg';
 import GridLoader from "react-spinners/GridLoader";
@@ -9,7 +9,11 @@ export default function Owner() {
     const [provider, setProvider] = useState(null);
     const [account, setAccount] = useState(null);
     const [balance, setBalance] = useState(null);
+    const [contractBalance, setContractBalance] = useState(null);
+
     const [rewardLimit, setRewardLimit] = useState(0);
+    const [rewardLimitInput, setRewardLimitInput] = useState(0);
+
     const [contract, setContract] = useState(null);
     const [contractWithSigner, setContractWithSigner] = useState(null);
     const [eventList, setEventList] = useState([]);
@@ -17,352 +21,419 @@ export default function Owner() {
 
     const [totalSupply, setTotalSupply] = useState(null);
     const [ownerSupply, setOwnerSupply] = useState(null);
+    const [contractSupply, setContractSupply] = useState(null);
+
     const [stateUpdate, setStateUpdate] = useState(0);
     const [loading, setLoading] = useState(true);
 
 
 
-    const contractAddress  = "0x9E6B90f4e859DDc48f396511fcdFA5721fCbe1D9";
+    const contractAddress  = "0xcB6d501905Ee8C9Ce1DfD1DAd72F2688895BD0B9";
     const abi = [
-    {
-      "inputs": [],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "eventId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "string",
-          "name": "name",
-          "type": "string"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "ticketsAvailable",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "price",
-          "type": "uint256"
-        }
-      ],
-      "name": "EventCreated",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "eventId",
-          "type": "uint256"
-        }
-      ],
-      "name": "EventRemoved",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "eventId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "purchaser",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "ticketsBought",
-          "type": "uint256"
-        }
-      ],
-      "name": "TicketsPurchased",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "fromEventId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "toEventId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "recipient",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "ticketsTransferred",
-          "type": "uint256"
-        }
-      ],
-      "name": "TicketsTransferred",
-      "type": "event"
-    },
-    {
-      "stateMutability": "payable",
-      "type": "fallback"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "_name",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_ticketsAvailable",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_price",
-          "type": "uint256"
-        }
-      ],
-      "name": "createEvent",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "events",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "name",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "ticketsAvailable",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "price",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "active",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getEventList",
-      "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "uint256",
-              "name": "eventId",
-              "type": "uint256"
-            },
-            {
-              "internalType": "string",
-              "name": "name",
-              "type": "string"
-            },
-            {
-              "internalType": "uint256",
-              "name": "ticketsAvailable",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "price",
-              "type": "uint256"
-            },
-            {
-              "internalType": "bool",
-              "name": "active",
-              "type": "bool"
-            }
-          ],
-          "internalType": "struct TicketingSystem.EventInfo[]",
-          "name": "",
-          "type": "tuple[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getTotalSupply",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getTotalSupplyUser",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getUsersTickets",
-      "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "uint256",
-              "name": "eventId",
-              "type": "uint256"
-            },
-            {
-              "internalType": "string",
-              "name": "name",
-              "type": "string"
-            },
-            {
-              "internalType": "uint256",
-              "name": "ticketsOwned",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct TicketingSystem.UserTickets[]",
-          "name": "",
-          "type": "tuple[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "owner",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_eventId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_ticketsToBuy",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokensPay",
-          "type": "uint256"
-        }
-      ],
-      "name": "purchaseTickets",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_eventId",
-          "type": "uint256"
-        }
-      ],
-      "name": "removeEvent",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_eventId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "status",
-          "type": "bool"
-        }
-      ],
-      "name": "setEventStatus",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "stateMutability": "payable",
-      "type": "receive"
-    }
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "eventId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "ticketsAvailable",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "EventCreated",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "eventId",
+            "type": "uint256"
+          }
+        ],
+        "name": "EventRemoved",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "eventId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "purchaser",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "ticketsBought",
+            "type": "uint256"
+          }
+        ],
+        "name": "TicketsPurchased",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "fromEventId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "toEventId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "recipient",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "ticketsTransferred",
+            "type": "uint256"
+          }
+        ],
+        "name": "TicketsTransferred",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_rewardLimit",
+            "type": "uint256"
+          }
+        ],
+        "name": "changeRewardLimit",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_name",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_ticketsAvailable",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_price",
+            "type": "uint256"
+          }
+        ],
+        "name": "createEvent",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_eventId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_ticketsToBuy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokensPay",
+            "type": "uint256"
+          }
+        ],
+        "name": "purchaseTickets",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_eventId",
+            "type": "uint256"
+          }
+        ],
+        "name": "removeEvent",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_eventId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "status",
+            "type": "bool"
+          }
+        ],
+        "name": "setEventStatus",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "stateMutability": "payable",
+        "type": "receive"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "withdrawToOwner",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "stateMutability": "payable",
+        "type": "fallback"
+      },
+      {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "events",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "ticketsAvailable",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getContractBalance",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getEventList",
+        "outputs": [
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "eventId",
+                "type": "uint256"
+              },
+              {
+                "internalType": "string",
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "internalType": "uint256",
+                "name": "ticketsAvailable",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "price",
+                "type": "uint256"
+              },
+              {
+                "internalType": "bool",
+                "name": "active",
+                "type": "bool"
+              }
+            ],
+            "internalType": "struct TicketingSystem.EventInfo[]",
+            "name": "",
+            "type": "tuple[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getRemainSupply",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getTotalSupply",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getTotalSupplyUser",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getUsersTickets",
+        "outputs": [
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "eventId",
+                "type": "uint256"
+              },
+              {
+                "internalType": "string",
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "internalType": "uint256",
+                "name": "ticketsOwned",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct TicketingSystem.UserTickets[]",
+            "name": "",
+            "type": "tuple[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "rewardLimit",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
     ]
 
 
@@ -386,8 +457,16 @@ export default function Owner() {
           )));
           const totalSup = await contractWithSigner.getTotalSupply();
           const OwnerSup = await contractWithSigner.getTotalSupplyUser();
+          const contractSup = await contractWithSigner.getRemainSupply();
+          const rewLimit = await contractWithSigner.rewardLimit();
+          const contrBalance = await contractWithSigner.getContractBalance();
+
+          setContractBalance(contrBalance.toString());
+          setRewardLimit(rewLimit.toString());
+          setRewardLimitInput(weiToEther(rewLimit.toString()));
           setTotalSupply(totalSup.toString());
           setOwnerSupply(OwnerSup.toString());
+          setContractSupply(contractSup.toString());
         }
 
         if (typeof window !== "undefined") {
@@ -438,6 +517,21 @@ export default function Owner() {
     try{
       const createEv = await contractWithSigner.createEvent(createEvent.name, numb, amount)
       await createEv.wait()
+    }catch(err){
+      console.log(err)
+    }
+    setStateUpdate(stateUpdate+1);
+    setLoading(false);
+  }
+  const updateRewardLimit = async (e) =>{
+    setLoading(true);
+    e.preventDefault()
+    /* do validations */
+    let amount = Web3.utils.toWei(rewardLimitInput, 'ether');
+    amount = amount.toString();
+    try{
+      const updateRL = await contractWithSigner.changeRewardLimit(amount)
+      await updateRL.wait()
     }catch(err){
       console.log(err)
     }
@@ -514,7 +608,17 @@ export default function Owner() {
                 </div>
                 <div className='fieldSection'>
                   <label>
-                    Owner Supply: {ownerSupply}
+                    Contract Supply: {contractSupply} tokens
+                  </label>
+                </div>
+                <div className='fieldSection'>
+                  <label>
+                    Owner Supply: {ownerSupply} tokens
+                  </label>
+                </div>
+                <div className='fieldSection'>
+                  <label>
+                    Contract balance: {contractBalance} wei
                   </label>
                 </div>
               </div>
@@ -522,22 +626,27 @@ export default function Owner() {
                 <div className='subTitle'>Reward Limit</div>
                 <div className='fieldSection'>
                   <label>
-                    Current reward limit: {rewardLimit} 
+                    Current reward limit: {rewardLimit} wei
+                  </label>
+                </div>
+                <div className='fieldSection'>
+                  <label>
+                    or {weiToEther(rewardLimit)} ether
                   </label>
                 </div>
                 <div className='fieldSection'>
                   <label>
                     Reward Limit in ether
-                    <input name="name"/>
+                    <input name="rewardLimit" onChange={(e)=>{setRewardLimitInput(e.target.value)}} value={rewardLimitInput}/>
                   </label>
                 </div>
                 <div className='fieldSection'>
                   <label>
                     Reward Limit in wei
-                    <input name="name" disabled/>
+                    <input name="rewardLimit" value={Web3.utils.toWei(rewardLimitInput, 'ether')} disabled/>
                   </label>
                 </div>
-                <div className='create' onClick={submit}>Update</div>
+                <div className='create' onClick={updateRewardLimit}>Update Reward Limit</div>
 
               </div>
             </div>

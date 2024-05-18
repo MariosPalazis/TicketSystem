@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/marios/Desktop/AlchemyFinal/HardHat/contracts/Tsystem.sol": {
-      "lastModificationDate": 1715694640922,
-      "contentHash": "a4d18a90667020db122f37475b468983",
+      "lastModificationDate": 1715781017273,
+      "contentHash": "e1025751de410bbab0d60ffbe211609c",
       "sourceName": "contracts/Tsystem.sol",
       "solcConfig": {
         "version": "0.8.24",
