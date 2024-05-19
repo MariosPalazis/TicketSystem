@@ -15,17 +15,20 @@ describe("Test contract Token", function () {
     contract = await TestContract.deploy();
   });
 
-  /*
+  
   it("token should work", async function () {
       // Get output from functions
       const ownerTest = await contract.owner();
 
       expect(ownerTest).to.equal("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
       //expect(await contract.getTotalSupplyUser(ownerTest)).to.equal("1000");
-      expect(await contract.getTotalSupplyUser(contract.target)).to.equal("1000");
+      //expect(await contract.getTotalSupplyUser(contract.target)).to.equal("1000");
+      expect(await contract.getTotalSupplyUser(owner)).to.equal("0");
+      expect(await contract.getTotalSupplyUser(addr1)).to.equal("0");
+
       expect(await contract.getTotalSupply()).to.equal("1000");
   });
-  */
+  
   
 
   it("event system crud", async function () {
@@ -99,18 +102,20 @@ describe("User purchase tickets + tokens", function () {
       console.log(userTickets)
 
   })
-  /*
+  
   it("RewardLimit", async function () {
     console.log(await contract.connect(addr2).getTotalSupplyUser())
     console.log(await contract.connect(addr1).getTotalSupplyUser())
-    console.log(await contract.connect(owner).getRemainSupply())
-    console.log(await contract.connect(owner).getTotalSupply())
+    console.log(await contract.connect(owner).getTotalSupplyUser())
+
+    // console.log(await contract.connect(owner).getRemainSupply())
+    // console.log(await contract.connect(owner).getTotalSupply())
 
 
-    console.log(await contract.connect(addr1).rewardLimit())
-    await contract.connect(owner).changeRewardLimit(20);
-    console.log(await contract.connect(addr1).rewardLimit())
+    // console.log(await contract.connect(addr1).rewardLimit())
+    // await contract.connect(owner).changeRewardLimit(20);
+    // console.log(await contract.connect(addr1).rewardLimit())
     
   })
-  */
+  
 });

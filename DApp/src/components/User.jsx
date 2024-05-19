@@ -15,6 +15,7 @@ export default function User() {
   const [loading, setLoading] = useState(true);
   const [contract, setContract] = useState(null);
   const [contractWithSigner, setContractWithSigner] = useState(null);
+  const [userSupply, setUserSupply] = useState(0);
 
   const contractAddress  = "0xcB6d501905Ee8C9Ce1DfD1DAd72F2688895BD0B9";
   const abi = [
@@ -448,12 +449,28 @@ export default function User() {
               ? value.toString()
               : value // return everything else unchanged
         )));
+        try{
+          const userSup = await contractWithSigner.getTotalSupplyUser();
+          console.log(userSup)
+          setUserSupply(userSup.toString());
+        }catch(err){
+          console.log(err)
+        }
+    }
+
+    async function listenMMAccount() {
+      window.ethereum.on("accountsChanged", async function() {
+        fetchInfo()
+      });
     }
 
     if (typeof window !== "undefined") {
       if (window.ethereum) {
-          setProvider(new ethers.BrowserProvider(window.ethereum)); 
+          const providerr = new ethers.BrowserProvider(window.ethereum);
+          setProvider(providerr); 
           fetchInfo();
+          listenMMAccount();
+
       } else {
           console.error("Please install MetaMask!");
           alert("Please install MetaMask!")
@@ -487,7 +504,7 @@ export default function User() {
               <div className='eventsList'>
                 <div className='subTitle'>Event List</div>
                 <div className='eventRow'>
-                  <div className='eventCol'>Event Id</div> <div className='eventCol'>Event Name</div> <div className='eventCol'>Tickets Owned</div>
+                  <div className='eventCol'>Event Id</div> <div className='eventCol'>Name</div> <div className='eventCol'>Available Tickets</div> <div className='eventCol'>Price (ether)</div> 
                 </div>
                 {eventList.map((ev, key)=>{
                   {
@@ -505,12 +522,12 @@ export default function User() {
                     userTicketsList.length > 0
                     ?<>
                       <div className='eventRow'>
-                        <div className='eventCol'>Event Id</div> <div className='eventCol'>Name</div> <div className='eventCol'>Available Tickets</div> <div className='eventCol'>Price (ether)</div> 
+                        <div className='eventCol'>Event Id</div> <div className='eventCol'>Event Name</div> <div className='eventCol'>Tickets Owned</div>
                       </div>
                       {userTicketsList.map((ev, key)=>{
                       {
                         return <div className='eventRow' key={key}>
-                                  <div className='eventCol'>{ev[0]}</div> <div className='eventCol'>{ev[1]}</div> <div className='eventCol'>{ev[2]}</div> <div className='eventCol'>{weiToEther(ev[3])}</div>
+                                  <div className='eventCol'>{ev[0]}</div> <div className='eventCol'>{ev[1]}</div> <div className='eventCol'>{ev[2]}</div>
                                 </div>
                         
                       }
@@ -519,6 +536,22 @@ export default function User() {
                     :<div className='noTickets'>You don't have any Tickets</div>
                   }
                   
+              </div>
+            </div>
+            <hr />
+            <div className='tokenSection'>
+              <div className='eventsList'>
+                <div className='subTitle'>Tokens TCK</div>
+                <div className='fieldSection'>
+                  <label>
+                    Your tokens owned: {userSupply} tokens
+                  </label>
+                </div>
+              </div>
+              <div className='eventsList'>
+                <div className='subTitle'>Purchase tickets</div>
+                
+
               </div>
             </div>
             
