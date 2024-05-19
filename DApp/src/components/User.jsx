@@ -16,6 +16,8 @@ export default function User() {
   const [contract, setContract] = useState(null);
   const [contractWithSigner, setContractWithSigner] = useState(null);
   const [userSupply, setUserSupply] = useState(0);
+  const [buyEvent, setBuyEvent] = useState({eventId:"", number: 0, tokens: 0});
+
 
   const contractAddress  = "0xcB6d501905Ee8C9Ce1DfD1DAd72F2688895BD0B9";
   const abi = [
@@ -451,7 +453,6 @@ export default function User() {
         )));
         try{
           const userSup = await contractWithSigner.getTotalSupplyUser();
-          console.log(userSup)
           setUserSupply(userSup.toString());
         }catch(err){
           console.log(err)
@@ -481,6 +482,33 @@ export default function User() {
 
   const weiToEther = (wei) =>{
     return Web3.utils.fromWei(wei, 'ether');
+  }
+
+  const updateForm = (e) =>{
+    setBuyEvent((prevEvent => ({
+      ...prevEvent,
+      [e.target.name]: e.target.value
+    })));
+  }
+
+  const buy = async (e) =>{
+    setLoading(true);
+    e.preventDefault()
+    /* do validations */
+    const eventPrice = eventList.find((x)=>x[0]==buyEvent.eventId)
+    const cost = buyEvent.number *eventPrice[3];
+    console.log(cost)
+    // try{
+    //   const createEv = await contractWithSigner.purchaseTickets(buyEvent.eventId, buyEvent.number, buyEvent.tokens).send({
+    //     from: account,
+    //     value: web3.utils.toWei('1', 'ether'), // Sending 1 Ether
+    // });
+    //   await createEv.wait()
+    // }catch(err){
+    //   console.log(err)
+    // }
+    setStateUpdate(stateUpdate+1);
+    setLoading(false);
   }
 
   return (
@@ -550,7 +578,27 @@ export default function User() {
               </div>
               <div className='eventsList'>
                 <div className='subTitle'>Purchase tickets</div>
-                
+                <div className='form'>
+                    <div className='fieldSection'>
+                      <label>
+                        Event Id:
+                        <input name="eventId" onChange={updateForm}/>
+                      </label>
+                    </div>
+                    <div className='fieldSection'>
+                      <label>
+                        Number of tickets:
+                        <input name="number" type='number' onChange={updateForm} />
+                      </label>
+                    </div>
+                    <div className='fieldSection'>
+                      <label>
+                        Tokens:
+                        <input name="tokens" type='number' onChange={updateForm} />
+                      </label>
+                    </div>
+                    <div className='create' onClick={buy}>Buy</div>
+                </div>
 
               </div>
             </div>

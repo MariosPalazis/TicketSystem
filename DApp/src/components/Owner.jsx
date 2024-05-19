@@ -469,10 +469,17 @@ export default function Owner() {
           setContractSupply(contractSup.toString());
         }
 
+        async function listenMMAccount() {
+          window.ethereum.on("accountsChanged", async function() {
+            fetchInfo()
+          });
+        }
+
         if (typeof window !== "undefined") {
             if (window.ethereum) {
                 setProvider(new ethers.BrowserProvider(window.ethereum)); 
                 fetchInfo();
+                listenMMAccount();
             } else {
                 console.error("Please install MetaMask!");
                 alert("Please install MetaMask!")
