@@ -10,6 +10,7 @@ export default function User() {
   const [balance, setBalance] = useState(null);
   const [eventList, setEventList] = useState([]);
   const [userTicketsList, setUserTicketsList] = useState([]);
+  const [rewardLimit, setRewardLimit] = useState(0);
 
   const [stateUpdate, setStateUpdate] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -17,6 +18,7 @@ export default function User() {
   const [contractWithSigner, setContractWithSigner] = useState(null);
   const [userSupply, setUserSupply] = useState(0);
   const [buyEvent, setBuyEvent] = useState({eventId:"", number: 0, tokens: 0});
+  const [estimatedCost, setEstimatedCost] = useState(0);
 
 
   const contractAddress  = "0xcB6d501905Ee8C9Ce1DfD1DAd72F2688895BD0B9";
@@ -434,6 +436,9 @@ export default function User() {
         const signer = await new ethers.BrowserProvider(window.ethereum).getSigner(); // Assumes Metamask or similar is injected in the browser
         const weiValue = await new ethers.BrowserProvider(window.ethereum).getBalance(signer.address);
         const contractWithSigner = contract.connect(await signer);
+        const rewLimit = await contractWithSigner.rewardLimit();
+
+        setRewardLimit(rewLimit.toString());
         setContract(contract);
         setAccount(signer);
         setBalance(weiValue.toString());
@@ -489,25 +494,46 @@ export default function User() {
       ...prevEvent,
       [e.target.name]: e.target.value
     })));
+    
   }
+
+  const estimateCost = (e) =>{
+    const eventPrice = eventList.find((x)=>x[0]==buyEvent.eventId) || 0;
+    if(buyEvent.number>0 && typeof eventPrice[3]!=="undefined"){
+      console.log(buyEvent.number, eventPrice[3], buyEvent.tokens )
+      const cost = (buyEvent.number *eventPrice[3]) - (buyEvent.tokens * 5 * 55279);
+      console.log(cost)
+      setEstimatedCost(cost);
+    }
+  }
+  
 
   const buy = async (e) =>{
     setLoading(true);
-    e.preventDefault()
+    e.preventDefault();
+    let updTokens = buyEvent.tokens;
     /* do validations */
     const eventPrice = eventList.find((x)=>x[0]==buyEvent.eventId)
-    const cost = buyEvent.number *eventPrice[3];
-    console.log(cost)
-    // try{
-    //   const createEv = await contractWithSigner.purchaseTickets(buyEvent.eventId, buyEvent.number, buyEvent.tokens).send({
-    //     from: account,
-    //     value: web3.utils.toWei('1', 'ether'), // Sending 1 Ether
-    // });
-    //   await createEv.wait()
-    // }catch(err){
-    //   console.log(err)
-    // }
-    setStateUpdate(stateUpdate+1);
+    if(buyEvent.tokens > parseInt(userSupply)){
+      updTokens = userSupply;
+      setBuyEvent((prevEvent => ({
+        ...prevEvent,
+        ["tokens"]: updTokens
+      })));
+    }
+    if(updTokens < 0){
+      updTokens = 0;
+    }
+    if(buyEvent.number>0 && typeof eventPrice[3]!=="undefined"){
+      const cost = (buyEvent.number *eventPrice[3]) - (updTokens * 5 * 55279);
+      try{
+        const createEv = await contractWithSigner.purchaseTickets(buyEvent.eventId, buyEvent.number, buyEvent.tokens, {value: String(cost)});
+        await createEv.wait()
+      }catch(err){
+        console.log(err)
+      }
+      setStateUpdate(stateUpdate+1);
+    }
     setLoading(false);
   }
 
@@ -575,6 +601,16 @@ export default function User() {
                     Your tokens owned: {userSupply} tokens
                   </label>
                 </div>
+                <div className='fieldSection'>
+                  <label>
+                    Current reward limit: {rewardLimit} wei
+                  </label>
+                </div>
+                <div className='fieldSection'>
+                  <label>
+                    or: {weiToEther(rewardLimit)} ether
+                  </label>
+                </div>
               </div>
               <div className='eventsList'>
                 <div className='subTitle'>Purchase tickets</div>
@@ -597,7 +633,19 @@ export default function User() {
                         <input name="tokens" type='number' onChange={updateForm} />
                       </label>
                     </div>
-                    <div className='create' onClick={buy}>Buy</div>
+                    <div className='fieldSection'>
+                      <label>
+                        Estimated Cost: {estimatedCost} wei
+                      </label>
+                    </div>
+                    <div className='fieldSection'>
+                      <label>
+                        or: {weiToEther(estimatedCost)} ether
+                      </label>
+                    </div>
+                    <div className='create' onClick={estimateCost}>Estimate Cost</div>
+
+                    <div className='create' onClick={buy}>Buy</div>  
                 </div>
 
               </div>

@@ -628,6 +628,11 @@ export default function Owner() {
                     Contract balance: {contractBalance} wei
                   </label>
                 </div>
+                <div className='fieldSection'>
+                  <label>
+                    or: {weiToEther(contractBalance)} ether
+                  </label>
+                </div>
               </div>
               <div className='eventsList'>
                 <div className='subTitle'>Reward Limit</div>
