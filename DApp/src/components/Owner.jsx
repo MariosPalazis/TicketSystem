@@ -20,7 +20,11 @@ export default function Owner() {
     const [createEvent, setCreateEvent] = useState({name:"", capacity: 0, price: 0});
 
     const [totalSupply, setTotalSupply] = useState(null);
+    const [ethToWithdraw, setEthToWithdraw] = useState(0);
+
     const [ownerSupply, setOwnerSupply] = useState(null);
+    const [owner, setOwner] = useState(null);
+
     const [contractSupply, setContractSupply] = useState(null);
 
     const [stateUpdate, setStateUpdate] = useState(0);
@@ -457,10 +461,12 @@ export default function Owner() {
           )));
           const totalSup = await contractWithSigner.getTotalSupply();
           const OwnerSup = await contractWithSigner.getTotalSupplyUser();
+          const Owner = await contractWithSigner.owner();
           const contractSup = await contractWithSigner.getRemainSupply();
           const rewLimit = await contractWithSigner.rewardLimit();
           const contrBalance = await contractWithSigner.getContractBalance();
 
+          setOwner(Owner.toString());
           setContractBalance(contrBalance.toString());
           setRewardLimit(rewLimit.toString());
           setRewardLimitInput(weiToEther(rewLimit.toString()));
@@ -513,6 +519,27 @@ export default function Owner() {
     setLoading(false);
   }
 
+  const withdraw = async (e) =>{
+    e.preventDefault()
+    setLoading(true);
+    let weiToWithdraw = Web3.utils.toWei(ethToWithdraw, 'ether');
+
+    if(parseInt(weiToWithdraw) > contractBalance){
+      weiToWithdraw = contractBalance;
+    }
+    if(parseInt(weiToWithdraw) > 0){
+      try{
+        const withdraw = await contractWithSigner.withdrawToOwner(weiToWithdraw);
+        console.log(withdraw)
+        await withdraw.wait()
+        console.log(withdraw)
+      }catch(err){
+        console.log(err)
+      }
+      setStateUpdate(stateUpdate+1);
+    }
+    setLoading(false);
+  }
 
   const submit = async (e) =>{
     setLoading(true);
@@ -630,9 +657,32 @@ export default function Owner() {
                 </div>
                 <div className='fieldSection'>
                   <label>
-                    or: {weiToEther(contractBalance)} ether
+                    or: {weiToEther(parseInt(contractBalance))} ether
                   </label>
                 </div>
+                <hr />
+                <div className='subTitle'>Withdraw to owner</div>
+
+                <div className='fieldSection'>
+                  <label>
+                    Send contract's ether to the owner 
+                  </label>
+                </div>
+                <div className='fieldSection'>
+                  <label>
+                    which is {owner}
+                  </label>
+                </div>
+                <div className='fieldSection'>
+                    <label>Ether</label>
+                    <input name="withdraw" onChange={(e)=>{setEthToWithdraw(e.target.value)}} value={ethToWithdraw}/>
+                </div>
+                <div className='fieldSection'>
+                    <label>Wei</label>
+                    <input name="withdraw" value={Web3.utils.toWei(ethToWithdraw, 'ether')} disabled/>
+                </div>
+                <div className='create' onClick={withdraw}>Withdraw</div>
+
               </div>
               <div className='eventsList'>
                 <div className='subTitle'>Reward Limit</div>
